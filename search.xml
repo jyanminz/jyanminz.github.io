@@ -8,9 +8,21 @@
       <link href="/2023/04/07/Redis%E6%8C%81%E4%B9%85%E5%8C%96/"/>
       <url>/2023/04/07/Redis%E6%8C%81%E4%B9%85%E5%8C%96/</url>
       
-        <content type="html"><![CDATA[]]></content>
+        <content type="html"><![CDATA[<h1 id="Redis三种数据持久化方式"><a href="#Redis三种数据持久化方式" class="headerlink" title="Redis三种数据持久化方式"></a>Redis三种数据持久化方式</h1><h2 id="一、AOF日志"><a href="#一、AOF日志" class="headerlink" title="一、AOF日志"></a>一、AOF日志</h2><h2 id="二、RDB快照"><a href="#二、RDB快照" class="headerlink" title="二、RDB快照"></a>二、RDB快照</h2><h2 id="三、混合持久化方式"><a href="#三、混合持久化方式" class="headerlink" title="三、混合持久化方式"></a>三、混合持久化方式</h2>]]></content>
       
       
+      <categories>
+          
+          <category> DBMS </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> redis </tag>
+            
+        </tags>
       
     </entry>
     
