@@ -4,19 +4,6 @@
   
     
     <entry>
-      <title>Mysql的ACID特性详解及实现</title>
-      <link href="/2023/04/07/Mysql%E7%9A%84ACID%E7%89%B9%E6%80%A7%E8%AF%A6%E8%A7%A3%E5%8F%8A%E5%AE%9E%E7%8E%B0/"/>
-      <url>/2023/04/07/Mysql%E7%9A%84ACID%E7%89%B9%E6%80%A7%E8%AF%A6%E8%A7%A3%E5%8F%8A%E5%AE%9E%E7%8E%B0/</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-      
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>Redis持久化</title>
       <link href="/2023/04/07/Redis%E6%8C%81%E4%B9%85%E5%8C%96/"/>
       <url>/2023/04/07/Redis%E6%8C%81%E4%B9%85%E5%8C%96/</url>
@@ -24,31 +11,6 @@
         <content type="html"><![CDATA[]]></content>
       
       
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>helloworld</title>
-      <link href="/2023/04/06/helloworld/"/>
-      <url>/2023/04/06/helloworld/</url>
-      
-        <content type="html"><![CDATA[<h1 id="你好哇！李银河。"><a href="#你好哇！李银河。" class="headerlink" title="你好哇！李银河。"></a>你好哇！李银河。</h1>]]></content>
-      
-      
-      <categories>
-          
-          <category> nihao </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> hello </tag>
-            
-        </tags>
       
     </entry>
     
