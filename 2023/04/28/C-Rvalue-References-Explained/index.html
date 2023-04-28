@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="C++ Rvalue References ExplainedRvalue references solve at least two problems:  Implementing move semantics Perfect forwarding  C++中的左值和右值 早期在C中对lvalue和rvalue最初的定义如下：  lvalue：一个出现在赋值符左边或者右边的expression（">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++ Rvalue References Explained">
+<meta property="og:url" content="http://example.com/2023/04/28/C-Rvalue-References-Explained/index.html">
+<meta property="og:site_name" content="jyanmin&#39;s blog">
+<meta property="og:description" content="C++ Rvalue References ExplainedRvalue references solve at least two problems:  Implementing move semantics Perfect forwarding  C++中的左值和右值 早期在C中对lvalue和rvalue最初的定义如下：  lvalue：一个出现在赋值符左边或者右边的expression（">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-04-28T07:43:22.000Z">
+<meta property="article:modified_time" content="2023-04-28T07:44:53.089Z">
+<meta property="article:author" content="jyanmin">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>C++ Rvalue References Explained</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">home</a></li><!--
+     --><!--
+       --><li><a href="/about/">about</a></li><!--
+     --><!--
+       --><li><a href="/archives/">articles</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/jyanminz">projects</a></li><!--
+     --><!--
+       --><li><a href="/search/">search</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2023/04/17/CMU15445-PROJECT-1-BUFFER-POOL/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2023/04/28/C-Rvalue-References-Explained/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&text=C++ Rvalue References Explained"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&title=C++ Rvalue References Explained"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&is_video=false&description=C++ Rvalue References Explained"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=C++ Rvalue References Explained&body=Check out this article: http://example.com/2023/04/28/C-Rvalue-References-Explained/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&title=C++ Rvalue References Explained"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&title=C++ Rvalue References Explained"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&title=C++ Rvalue References Explained"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&title=C++ Rvalue References Explained"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&name=C++ Rvalue References Explained&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2023/04/28/C-Rvalue-References-Explained/&t=C++ Rvalue References Explained"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#C-Rvalue-References-Explained"><span class="toc-number">1.</span> <span class="toc-text">C++ Rvalue References Explained</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#C-%E4%B8%AD%E7%9A%84%E5%B7%A6%E5%80%BC%E5%92%8C%E5%8F%B3%E5%80%BC"><span class="toc-number">2.</span> <span class="toc-text">C++中的左值和右值</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%A7%BB%E5%8A%A8%E8%AF%AD%E4%B9%89"><span class="toc-number">3.</span> <span class="toc-text">移动语义</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8"><span class="toc-number">4.</span> <span class="toc-text">右值引用</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Forcing-Move-Semantics"><span class="toc-number">5.</span> <span class="toc-text">Forcing Move Semantics</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Is-an-Rvalue-Reference-an-Rvalue"><span class="toc-number">6.</span> <span class="toc-text">Is an Rvalue Reference an Rvalue?</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Move-Semantics-and-Compiler-Optimizations"><span class="toc-number">7.</span> <span class="toc-text">Move Semantics and Compiler Optimizations</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Perfect-Forwarding-The-Problem"><span class="toc-number">8.</span> <span class="toc-text">Perfect Forwarding: The Problem</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Perfect-Forwarding-The-Solution"><span class="toc-number">9.</span> <span class="toc-text">Perfect Forwarding: The Solution</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Rvalue-References-And-Exceptions"><span class="toc-number">10.</span> <span class="toc-text">Rvalue References And Exceptions</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#The-Case-of-the-Implicit-Move"><span class="toc-number">11.</span> <span class="toc-text">The Case of the Implicit Move</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        C++ Rvalue References Explained
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">jyanmin</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-04-28T07:43:22.000Z" itemprop="datePublished">2023-04-28</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h1 id="C-Rvalue-References-Explained"><a href="#C-Rvalue-References-Explained" class="headerlink" title="C++ Rvalue References Explained"></a><strong>C++ Rvalue References Explained</strong></h1><p>Rvalue references solve at least two problems:</p>
+<ol>
+<li>Implementing move semantics</li>
+<li>Perfect forwarding</li>
+</ol>
+<h1 id="C-中的左值和右值"><a href="#C-中的左值和右值" class="headerlink" title="C++中的左值和右值"></a>C++中的左值和右值</h1><ol>
+<li><p>早期在C中对lvalue和rvalue最初的定义如下：</p>
+<ol>
+<li><p>lvalue：一个出现在赋值符左边或者右边的expression（An <em>lvalue</em> is an expression <code>e</code> that may appear on the left or on the right hand side of an assignment）</p>
+</li>
+<li><p>rvalue：只出现在赋值符右边的expression（An <em>lvalue</em> is an expression <code>e</code>that may appear on the left or on the right hand side of an assignment）</p>
+</li>
+<li><p>举例来说：</p>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> a = <span class="number">1</span>;</span><br><span class="line"><span class="type">int</span> b = <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//a和b都是lvalues</span></span><br><span class="line">a = b;</span><br><span class="line">b = a;</span><br><span class="line">a = a * b;</span><br><span class="line"></span><br><span class="line"><span class="comment">//a * b是一个rvalue</span></span><br><span class="line"><span class="type">int</span> c = a * b;</span><br><span class="line">a * b = <span class="number">42</span><span class="comment">//false</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+</li>
+<li><p>在C++中，利用早期C中对于lvalue和rvalue的定义仍然有用，并且这种判断方法是一个intuitive的方法</p>
+</li>
+<li><p>但是在C++中，由用户定义的类型在modifiability和assignability中引入了一些微妙的变化，这些变化使得上述的定义变得不再准确。我们无需go further into this；下面是一个代替上述定义的定义，即使该定义存在一些争议，但会让读者更加容易理解rvalue references：</p>
+<ol>
+<li><p>lvalue即是一个expression，该expression refer to一个内存地址，并且允许我们通过&amp;来获取该内存地址的地址（An <em>lvalue</em> is an expression that refers to a memory location and allows us to take the address of that memory location via the <code>&amp;</code>operator）</p>
+</li>
+<li><p>rvalue即是一个expression，不是lvalue的就是rvalue（An <em>rvalue</em> is an expression that is not an lvalue）</p>
+</li>
+<li><p>举例来说</p>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//lvalues:</span></span><br><span class="line"><span class="type">int</span> i = <span class="number">42</span>;</span><br><span class="line">i = <span class="number">43</span>;<span class="comment">//i is a lvalue</span></span><br><span class="line"><span class="type">int</span> *p = &amp;i;<span class="comment">//i is a lvalue</span></span><br><span class="line"><span class="function"><span class="type">int</span> &amp;<span class="title">foo</span><span class="params">()</span></span>;</span><br><span class="line"><span class="built_in">foo</span>() = <span class="number">42</span>;<span class="comment">//foo() is a lvalue</span></span><br><span class="line"><span class="type">int</span> *pl = &amp;<span class="built_in">foo</span>();<span class="comment">// foo() is a lvalue</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//rvalues:</span></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">foobar</span><span class="params">()</span></span>;</span><br><span class="line"><span class="type">int</span> j = <span class="number">0</span>;</span><br><span class="line">j = <span class="built_in">foobar</span>();<span class="comment">//foobar() is a rvalue</span></span><br><span class="line"><span class="type">int</span> *p2 = &amp;<span class="built_in">foobar</span>();<span class="comment">//error cannot take the address of a rvalue</span></span><br><span class="line">j = <span class="number">32</span>;<span class="comment">//32 is a rvalue</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+</li>
+</ol>
+<h1 id="移动语义"><a href="#移动语义" class="headerlink" title="移动语义"></a>移动语义</h1><p>假设X是一个维护或者handle某些资源的类，比如说m_pResource；这里说的资源resource，作者指的是任何需要付出一定代价来construct（构建）、clone（克隆）、destruct（析构）的事物。</p>
+<p>一个很好的例子是std::vector，一个vector在为其分配的内存中维护了一系列的对象objs。那么，逻辑上来说，对于X的copy assignment operator就会类似如下的形式：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">X&amp; X::<span class="keyword">operator</span>=(X <span class="type">const</span> &amp;rhs)&#123;</span><br><span class="line">	<span class="comment">//[...]</span></span><br><span class="line">	<span class="comment">//make a clone of what ths.m_pResource refers to</span></span><br><span class="line">	<span class="comment">//destruct the resource that m_pResouce refers to</span></span><br><span class="line">	<span class="comment">//attach the clone to m_pResource</span></span><br><span class="line">	<span class="comment">//[...]</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于X的copy constructor，类似于上述代码中的逻辑同样适用，假设X被如下使用：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">X <span class="title">foo</span><span class="params">()</span></span>;</span><br><span class="line">X x;</span><br><span class="line"><span class="comment">// perhaps use x in various ways</span></span><br><span class="line">x = <span class="built_in">foo</span>();</span><br></pre></td></tr></table></figure>
+
+<p>上述代码中的最后一行实际上完成了如下工作：</p>
+<ul>
+<li>从foo中返回的临时资源中clone</li>
+<li>destruct x持有的资源并将其用clone来代替</li>
+<li>destruct这个临时的资源并由此释放其资源</li>
+</ul>
+<p>显然，如果能够在x和临时资源之间通过**swap resource pointers(handles)**，接着令临时资源的destructor来destruct x的原始资源（to swap resource pointers (handles) between <code>x</code> and the temporary, and then let the temporary’s destructor destruct <code>x</code>‘s original resource），这样的方法更为有效。换一种方式来说，当在赋值符右边是一个rvalue的特殊情况下，我们希望copy assignment operator以如下的方式运作：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// [...]</span></span><br><span class="line"><span class="comment">// swap m_pResource and rhs.m_pResource</span></span><br><span class="line"><span class="comment">// [...]</span></span><br></pre></td></tr></table></figure>
+
+<p>这被称为移动语义，在C++11中，这种conditional behavior可以通过一个重载来完成：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">X&amp; X::<span class="keyword">operator</span>=(&lt;mystery type&gt; rhs)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">// [...]</span></span><br><span class="line">  <span class="comment">// swap this-&gt;m_pResource and rhs.m_pResource</span></span><br><span class="line">  <span class="comment">// [...]  </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>既然我们正在定义一个copy assignment operator的重载，上述代码中的mystery type必须是一个引用（we certainly want the right hand side to be passed to us by reference）</p>
+<p>并且，我们期望mystery type具有如下的表现：</p>
+<ol>
+<li>当在一个使用普通引用和一个使用mystery type的两个重载中，rvalue选择mystery type的重载实现</li>
+<li>而lvalues选择普通引用的重载实现</li>
+</ol>
+<p>此时，如果我们用rvalue reference来代替上述的mystery type，那么我们看到的就是关于rvalue reference的定义</p>
+<h1 id="右值引用"><a href="#右值引用" class="headerlink" title="右值引用"></a>右值引用</h1><p>如果X是一个任意的类型，那么X&amp;&amp;就是一个X的右值引用，为了更好的区分，普通的引用X&amp;又被称为左值引用</p>
+<p>右值引用在很多方面与左值引用并无二致，但其在某些方面表现不同，其中最重要的就是在函数重载中，lvalue倾向于使用lvalue references，而rvalue倾向于使用rvalue references</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">foo</span><span class="params">(X&amp; x)</span></span>; <span class="comment">// lvalue reference overload</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">foo</span><span class="params">(X&amp;&amp; x)</span></span>; <span class="comment">// rvalue reference overload</span></span><br><span class="line"></span><br><span class="line">X x;</span><br><span class="line"><span class="function">X <span class="title">foobar</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="built_in">foo</span>(x); <span class="comment">// argument is lvalue: calls foo(X&amp;)</span></span><br><span class="line"><span class="built_in">foo</span>(<span class="built_in">foobar</span>()); <span class="comment">// argument is rvalue: calls foo(X&amp;&amp;)</span></span><br></pre></td></tr></table></figure>
+
+<p>故其主旨在于：</p>
+<blockquote>
+<p>Rvalue references allow a function to branch <strong>at compile time</strong> (via overload resolution) on the condition “Am I being called on an lvalue or an rvalue?”</p>
+</blockquote>
+<p>事实上，我们可以为任意函数重载一个使用rvalue references的定义，但是在绝大多数情况下，这种重载应该只发生在copy constructor以及assignment operator中，由此来实现移动语义</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">X&amp; X::<span class="keyword">operator</span>=(X <span class="type">const</span> &amp; rhs); <span class="comment">// classical implementation</span></span><br><span class="line">X&amp; X::<span class="keyword">operator</span>=(X&amp;&amp; rhs)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">// Move semantics: exchange content between this and rhs</span></span><br><span class="line">  <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于copy constructor的右值引用重载来说，其实现与上述代码类似；</p>
+<ul>
+<li>注意：<ul>
+<li>如果我们实现void foo(X &amp;)而没有实现void foo(X&amp;&amp;)，那么函数调用时没有发生变化：foo可以传入lvalues来调用，而不能通过传入rvalues来调用</li>
+<li>如果我们实现void(X const &amp;)而没有实现void foo(X &amp;&amp;)，此时，foo可以通过传入lvalues和rvalues来调用，但是无法区分lvalues和rvalues，要想达到区分lvalues和rvalues的目的，必须实现void foo(X &amp;&amp;)</li>
+<li>如果我们只实现void foo(X&amp;&amp;)而没有其他两个函数，那么根据C++11的最终版本，foo可以通过传入rvalues调用，但是如果传入一个lvalue将会触发编译错误</li>
+</ul>
+</li>
+</ul>
+<h1 id="Forcing-Move-Semantics"><a href="#Forcing-Move-Semantics" class="headerlink" title="Forcing Move Semantics"></a><strong>Forcing Move Semantics</strong></h1><p>C++11允许程序员在rvalues和lvalues上使用移动语义，一个很好的例子就是标准库函数中的swap；同样的，令X为一个重载了copy constructor和copy assignment operator的类，如此来完成在rvalues实现移动语义</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">swap</span><span class="params">(T&amp; a, T&amp; b)</span> </span></span><br><span class="line"><span class="function"></span>&#123; </span><br><span class="line">  <span class="function">T <span class="title">tmp</span><span class="params">(a)</span></span>;</span><br><span class="line">  a = b; </span><br><span class="line">  b = tmp; </span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line">X a, b;</span><br><span class="line"><span class="built_in">swap</span>(a, b);</span><br></pre></td></tr></table></figure>
+
+<p>上述代码中没有rvalues，因此，swap函数的三行代码中使用non-move semantic，但是我们知道在如下场景可以使用移动语义：任何时候当一个variable成为copy construction或者copy assignment的源（source），这个variable不会再被使用或者称为一个assignment的目标（wherever a variable occurs as the source of a copy construction or assignment, that variable is either not used again at all, or else it is used only as the target of an assignment.）</p>
+<p>C++11中，存在一个标准库函数std::move，这个函数用于将其参数转换为rvalue，在C++11中，标准库函数swap看起来就像下面这样：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt; </span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">swap</span><span class="params">(T&amp; a, T&amp; b)</span> </span></span><br><span class="line"><span class="function"></span>&#123; </span><br><span class="line">  <span class="function">T <span class="title">tmp</span><span class="params">(std::move(a))</span></span>;</span><br><span class="line">  a = std::<span class="built_in">move</span>(b); </span><br><span class="line">  b = std::<span class="built_in">move</span>(tmp);</span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line">X a, b;</span><br><span class="line"><span class="built_in">swap</span>(a, b);</span><br></pre></td></tr></table></figure>
+
+<p>如此一来，swap函数的三行代码中使用到了移动语义，对于没有实现移动语义的类型来说（即没有为其copy constructor和assignment operator重载右值引用的类型），这个新的swap的表现和老的swap一样。</p>
+<p>使用std::move为我们带来了如下好处：</p>
+<ol>
+<li>对于哪些实现了移动语义的类型，许多标准的算法或者操作通过使用移动语义显著节省资源；一个很好的例子就是inplace sorting，在其中使用了大量的swap</li>
+<li>STL经常需要特定类型具有copyability，即可成为容器元素的类型；但仔细审视，发现在大多数情况下，moveability已经足够。因此，我们可以使用具有moveability但非copyable的类型（如unique_pointer）</li>
+</ol>
+<p>既然我们已经知道了std::move的存在，我们就可以看出之前对copy assignment operator进行右值引用重载的方法存在一点问题。</p>
+<p>考虑一个简单的变量赋值：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a = b</span><br></pre></td></tr></table></figure>
+
+<p>我们期望a持有的对象被一个b的拷贝取代，并且在这个取代的过程中，我们期望a之前持有的对象被析构，现在考虑下一行代码：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a = std::<span class="built_in">move</span>(b);</span><br></pre></td></tr></table></figure>
+
+<p>如果实现移动语义仅用于一个简单的swap，那么上述代码中发生的只是：a和b交换了资源，没有任何析构发生，a之前持有的对象肯定最终会被析构，但仅仅发生在b超过其作用域。除非，b成为了move的对象，这种情况下，a之前持有的对象会继续被pass。</p>
+<p>因此，在我们考虑的copy assignment operator的实现中，我们不知道a之前持有的对象何时会被析构（Therefore, as far as the implementer of the copy assignment operator is concerned, it is not known when the object formerly held by <code>a</code> will be destructed）</p>
+<p>这种放任a持有对象被析构的时间可能不会出现问题（如果the destruction of that object does not have any side effects that are visible to the outside world），但我们必须考虑到意外情况，比如说在析构函数中释放一个锁呢？因此，在右值引用的重载copy assignmentoperator中关于对象的析构必须显式被调用。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">X&amp; X::<span class="keyword">operator</span>=(X&amp;&amp; rhs)</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Perform a cleanup that takes care of at least those parts of the</span></span><br><span class="line">  <span class="comment">// destructor that have side effects. Be sure to leave the object</span></span><br><span class="line">  <span class="comment">// in a destructible and assignable state.</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// Move semantics: exchange content between this and rhs</span></span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Is-an-Rvalue-Reference-an-Rvalue"><a href="#Is-an-Rvalue-Reference-an-Rvalue" class="headerlink" title="Is an Rvalue Reference an Rvalue?"></a><strong>Is an Rvalue Reference an Rvalue?</strong></h1><p>和之前一样，令X为一个利用移动语义重载了其copy constructor和copy assignment operator的类；考虑如下函数：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">foo</span><span class="params">(X &amp;&amp; x)</span></span>&#123;</span><br><span class="line">	X anotherX = x;</span><br><span class="line">	<span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有趣的问题是：在foo函数中，X的哪个版本的copy constructor会被调用？在这里，x是一个被声明为右值引用的变量，即，a reference which preferably and typically refers to an rvalue，因此，和x相关的函数调用应该和右值引用版本相关联，比如说<code>X(X&amp;&amp; rhs)</code>，换句话说，我们应该期待任何被声明为右值引用的东西本身应该是右值，右值引用的设计者应该考虑到一个细微的变化：</p>
+<blockquote>
+<p>任何被声明为右值引用的东西可以为lvalue或者rvalue，区分的标准是：如果这个东西有名字，那么其就是一个lvalue，否则其就是一个rvalue</p>
+</blockquote>
+<p>在上面的例子中，被声明为一个右值引用的东西有一个名称<code>x</code>，那么其就是一个<code>lvalue</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">foo</span><span class="params">(X&amp;&amp; x)</span></span>&#123;</span><br><span class="line">	X anotherX = x;<span class="comment">//calls X(X const &amp;rhs)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面就是一个被声明为右值引用而且没有名字，因此其是一个rvalue：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">X&amp;&amp; <span class="title">goo</span><span class="params">()</span></span>;</span><br><span class="line">X x = <span class="built_in">goo</span>(); <span class="comment">// calls X(X&amp;&amp; rhs) because the thing on</span></span><br><span class="line">             <span class="comment">// the right hand side has no name</span></span><br></pre></td></tr></table></figure>
+
+<p>这种设计背后的原因是：Allowing move semantics to be applied tacitly to something that has a name</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">X anotherX = x;</span><br><span class="line"><span class="comment">// x is still in scope!</span></span><br></pre></td></tr></table></figure>
+
+<p>像上述代码中的操作，是危险且容易招致错误的；因为我们已经移动过的东西在接下来的代码中仍然可以被访问，但是移动语义的全部要点就是：“在移动这个东西之后，dies and goes away”，因此上述规则：如果一个东西有名字，那么其就是一个左值，是合理的。</p>
+<p>那么关于上述规则的另外一部分该如何理解呢？：如果一个东西没有名字，那么其是一个右值。</p>
+<p>继续将目光投向上述的goo例子中，it is technically possible, though <strong>not very likely</strong>, that the expression <code>goo()</code> in the second line of the example refers to something that is still accessible after it has been moved from</p>
+<p>但是回顾之前的section：这正是我们想要的，我们想要能够在左值上实现强制移动语义。那么这正是这条规则：如果一个obj没有名字，那么该obj就是一个右值，这条规则允许我们以可控的方式（controlled manner）实现强制移动语义，这也是std::move实现的原理（std::move将参数以引用形式引入，并没有在这个参数上进行任何的操作，然后其结果返回的类型就是一个右值引用）</p>
+<p>该语句：std::move(x)被声明为一个右值引用而且并没有一个名字与其绑定，因此，其是一个右值。因此，std::move将其参数转换为一个右值，即使该参数本身不是一个右值。std::move实现的方式就是隐藏其名字。</p>
+<p>下面的例子说明了“if-it-has-a-name rule”有多么重要，假设有一个基类Base，在这个基类中为copy constructor和assignment operator重载了移动语义的版本：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Base</span>(Base <span class="type">const</span> &amp; rhs); <span class="comment">// non-move semantics</span></span><br><span class="line"><span class="built_in">Base</span>(Base&amp;&amp; rhs); <span class="comment">// move semantics</span></span><br></pre></td></tr></table></figure>
+
+<p>现在假设我们在Base的基础上实现了一个Derived类，为了确保移动语义在Derived对象中的Base部分被应用，我们必须重载Derived类的copy constructor和assignment operator，其中copy assignment operator的操作与上面的类似，对于左值的版本是非常直观的：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Derived</span>(Derived <span class="type">const</span> &amp; rhs) </span><br><span class="line">  : <span class="built_in">Base</span>(rhs)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">// Derived-specific stuff</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而对于右值的版本有一点细微的不同，当我们没有意识到“if-it-has-a-name rule”时，我们可能会写出如下代码：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Derived</span>(Derived&amp;&amp; rhs) </span><br><span class="line">  : <span class="built_in">Base</span>(rhs) <span class="comment">// wrong: rhs is an lvalue</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">// Derived-specific stuff</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>d如果我们写出像上面一样的代码，Base类中的非移动版本的copy constructor将会被调用，因为rhs是有名字的！因此，其是一个左值，但我们期望的是调用Base中移动版本的copy constructor，那么我们必须写出如下代码：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Derived</span>(Derived&amp;&amp; rhs) </span><br><span class="line">  : <span class="built_in">Base</span>(std::<span class="built_in">move</span>(rhs)) <span class="comment">// good, calls Base(Base&amp;&amp; rhs)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">// Derived-specific stuff</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Move-Semantics-and-Compiler-Optimizations"><a href="#Move-Semantics-and-Compiler-Optimizations" class="headerlink" title="Move Semantics and Compiler Optimizations"></a><strong>Move Semantics and Compiler Optimizations</strong></h1><p>考虑如下的函数定义：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">X <span class="title">foo</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  X x;</span><br><span class="line">  <span class="comment">// perhaps do something to x</span></span><br><span class="line">  <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>d假设X是一个为copy constructor和copy assignment operator重载了移动语义版本的类，如果我们从字面意义上理解上述代码，我们或许会说，“等等，在x到foo的返回值这块存在一个value copy的动作，让我们考虑使用移动语义吧”</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">X <span class="title">foo</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  X x;</span><br><span class="line">  <span class="comment">// perhaps do something to x</span></span><br><span class="line">  <span class="keyword">return</span> std::<span class="built_in">move</span>(x); <span class="comment">// making it worse!</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但不幸的是，上述代码将make things worse。任何现代编译器将对foo的原始版本进行一个返回值优化。换言之，与其在本地构建x然后将其复制出去，编译器会在foo的返回值处直接构建x对象，显而易见，这比使用移动语义要更好。</p>
+<p>正如你所见，为了最好地使用右值引用和移动语义，我们需要理解并考虑到现代编译器所作出的特殊努力，正如返回值优化以及copy elision。这会使得事情变得微妙起来，但是，we chose C++ as our language of choice for a reason, right? We made our beds, so now let’s lie in them.</p>
+<h1 id="Perfect-Forwarding-The-Problem"><a href="#Perfect-Forwarding-The-Problem" class="headerlink" title="Perfect Forwarding: The Problem"></a><strong>Perfect Forwarding: The Problem</strong></h1><p>考虑下面这个简单的工厂函数：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> Arg&gt; </span></span><br><span class="line"><span class="function">shared_ptr&lt;T&gt; <span class="title">factory</span><span class="params">(Arg arg)</span></span></span><br><span class="line"><span class="function"></span>&#123; </span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">shared_ptr</span>&lt;T&gt;(<span class="keyword">new</span> <span class="built_in">T</span>(arg));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>显而易见，该函数的意图是转发（forward）参数arg到T的构造函数中；理想来说，这个函数的工作方式应该就好像这个工厂函数并不存在，参数直接被转发到了构造函数中：即perfect forwarding。难过的是，上述代码完全不能胜任这个工作：其引入了一个新的面向值的调用（it introduces an extra call by value），当构造函数的参数为引用形式时，上述代码显得尤为拉跨。</p>
+<p>最常见的解决方式是：选择如Boost::bind或者其他outer function，将参数修改为引用的形式：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> Arg&gt; </span></span><br><span class="line"><span class="function">shared_ptr&lt;T&gt; <span class="title">factory</span><span class="params">(Arg&amp; arg)</span></span></span><br><span class="line"><span class="function"></span>&#123; </span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">shared_ptr</span>&lt;T&gt;(<span class="keyword">new</span> <span class="built_in">T</span>(arg));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述代码有些许改进，但是并非完美。现在问题变为：该工厂函数无法通过右值被调用：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">factory</span>&lt;X&gt;(<span class="built_in">hoo</span>()); <span class="comment">// error if hoo returns by value</span></span><br><span class="line"><span class="built_in">factory</span>&lt;X&gt;(<span class="number">41</span>); <span class="comment">// error</span></span><br></pre></td></tr></table></figure>
+
+<p>这可以通过将参数属性修改为const引用来改进：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> Arg&gt; </span></span><br><span class="line"><span class="function">shared_ptr&lt;T&gt; <span class="title">factory</span><span class="params">(Arg <span class="type">const</span> &amp; arg)</span></span></span><br><span class="line"><span class="function"></span>&#123; </span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">shared_ptr</span>&lt;T&gt;(<span class="keyword">new</span> <span class="built_in">T</span>(arg));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种方式存在两个问题：</p>
+<ol>
+<li>如果factory并非只有一个，而是含有多个参数，我们必须提供不同参数所有non-const和const引用的组合数目个重载</li>
+<li>这种转发并非完美，因为其避开了移动语义：在factory函数体中T的构造函数的参数是一个左值；因此，移动语义基本上不会发生（即使有可能没有这个包装函数，并且直接调用可能利用到移动语义）</li>
+</ol>
+<p>事实上，右值引用可以用来解决上述两个问题。右值引用为实现完美转发而不是使用非常多的重载成为可能。</p>
+<h1 id="Perfect-Forwarding-The-Solution"><a href="#Perfect-Forwarding-The-Solution" class="headerlink" title="Perfect Forwarding: The Solution"></a><strong>Perfect Forwarding: The Solution</strong></h1><p>为了理解右值引用如何实现完美转发，我们需要先介绍两条新的关于右值引用的规则。</p>
+<ol>
+<li><p>记得在pre-11 C++中的语法规则中，我们无法在引用上取引用：类似于A&amp; &amp;这样的调用会造成编译错误，而C++11引入了如下的<code>**reference collapsing rules**</code>：</p>
+<ol>
+<li>A&amp; &amp; becomes A&amp;</li>
+<li>A&amp; &amp;&amp; becomes A&amp;</li>
+<li>A&amp;&amp; &amp; becomes A&amp;</li>
+<li>A&amp;&amp; &amp;&amp; becomes A&amp;&amp;</li>
+</ol>
+</li>
+<li><p>对于接收右值引用作为template argument的函数模板，存在一种特殊的模板参数推断规则：</p>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">foo</span><span class="params">(T&amp;&amp;)</span></span>;</span><br></pre></td></tr></table></figure>
+<p> 对于上述代码来说适用下列的规则：</p>
+<ol>
+<li>当foo在一个类型为<strong>A的左值</strong>上被调用，**T被解析为A&amp;**，从而根据reference collapsing rule，参数类型将变为A&amp;</li>
+<li>当foo在一个类型为<strong>A的右值</strong>上被调用，<strong>T被解析为A</strong>，从而根据reference collapsing rule，参数类型将变为A&amp;&amp;</li>
+</ol>
+</li>
+</ol>
+<p>基于上述两条规则，我们现在可以适用右值引用来解决之前提到的完美转发的问题，解决方法如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> Arg&gt; </span></span><br><span class="line"><span class="function">shared_ptr&lt;T&gt; <span class="title">factory</span><span class="params">(Arg&amp;&amp; arg)</span></span></span><br><span class="line"><span class="function"></span>&#123; </span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">shared_ptr</span>&lt;T&gt;(<span class="keyword">new</span> <span class="built_in">T</span>(std::forward&lt;Arg&gt;(arg)));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述代码中的std::forward定义如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">class</span> S&gt;</span></span><br><span class="line"><span class="function">S&amp;&amp; <span class="title">forward</span><span class="params">(<span class="keyword">typename</span> remove_reference&lt;S&gt;::type&amp; a)</span> <span class="keyword">noexcept</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">static_cast</span>&lt;S&amp;&amp;&gt;(a);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面将从左值和右值两个方面来探讨上面的代码如何实现完美转发，令A和X为不同的类型。</p>
+<p>首先假设，factory<A>在一个类型为X 的左值上被调用：</A></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">X x;</span><br><span class="line"><span class="built_in">factory</span>&lt;A&gt;(x);</span><br></pre></td></tr></table></figure>
+
+<p>接着，基于special template deduction规则，factory的模板参数Arg被解析为X&amp;，因此，编译器会为factory和std::forward创建如下的实例（instantiation）</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">shared_ptr&lt;A&gt; <span class="title">factory</span><span class="params">(X&amp; &amp;&amp; arg)</span></span></span><br><span class="line"><span class="function"></span>&#123; </span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">shared_ptr</span>&lt;A&gt;(<span class="keyword">new</span> <span class="built_in">A</span>(std::forward&lt;X&amp;&gt;(arg)));</span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line"><span class="function">X&amp; &amp;&amp; <span class="title">forward</span><span class="params">(remove_reference&lt;X&amp;&gt;::type&amp; a)</span> <span class="keyword">noexcept</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">static_cast</span>&lt;X&amp; &amp;&amp;&gt;(a);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在evaluate remove_reference和应用reference collapsing规则之后，上述代码将变成：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">shared_ptr&lt;A&gt; <span class="title">factory</span><span class="params">(X&amp; arg)</span></span></span><br><span class="line"><span class="function"></span>&#123; </span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">shared_ptr</span>&lt;A&gt;(<span class="keyword">new</span> <span class="built_in">A</span>(std::forward&lt;X&amp;&gt;(arg)));</span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line"><span class="function">X&amp; <span class="title">std::forward</span><span class="params">(X&amp; a)</span> </span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">static_cast</span>&lt;X&amp;&gt;(a);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这正是对于左值的完美转发，factory的参数arg通过两层indirection传入到A的构造器中，两层都是通过old-fashioned左值引用</p>
+<p>接下来，假设factory<A>在类型为X的右值上被调用：</A></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">X <span class="title">foo</span><span class="params">()</span></span>;</span><br><span class="line"><span class="built_in">factory</span>&lt;A&gt;(<span class="built_in">foo</span>());</span><br></pre></td></tr></table></figure>
+
+<p>类似的，通过special template deduction规则，factory的模板参数Arg被解析为X。由此，编译器会创建如下的两个实例：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">shared_ptr&lt;A&gt; <span class="title">factory</span><span class="params">(X&amp;&amp; arg)</span></span></span><br><span class="line"><span class="function"></span>&#123; </span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">shared_ptr</span>&lt;A&gt;(<span class="keyword">new</span> <span class="built_in">A</span>(std::forward&lt;X&gt;(arg)));</span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line"><span class="function">X&amp;&amp; <span class="title">forward</span><span class="params">(X&amp; a)</span> <span class="keyword">noexcept</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">static_cast</span>&lt;X&amp;&amp;&gt;(a);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这正是右值的完美转发：factory的参数经过两层转发最终传入到A的构造器中，两层转发都是经过引用。而且，A的构造器看到的参数是一个右值引用而且并没有和一个名字绑定（does not have a name），基于no-name规则，这样的东西是一个右值。因此，A的构造器将通过一个右值来调用。这意味着转发保留了所有的移动语义，就像factory wrapper不存在时一样。</p>
+<p>值得提一嘴的是，std::forward存在的唯一目的就是为了保留移动语义（the preservation of move semantics is in fact the <em>only</em> purpose of <code>std::forward</code> in this context）如果不使用std::forward，除了A的构造器将永远将其参数视为一个有名字的左值，函数其他功能还是能够正常的工作。</p>
+<p>另一种说法是std::forward的目的就是：to forward the information whether at the call site, the wrapper saw an lvalue or an rvalue.</p>
+<p>如果想要再深挖一点，问问自己这个问题：在std::forward的定义中，remove_reference为何会存在？答案是：remove_reference可以不被需要，如果我们在std::forward定义中使用S&amp;而不是remove_reference<S>::type&amp;，我们可以得到上述一样的结果。但是，<strong>只有当我们显式地specify Arg作为std::forwad的模板参数才能达到上述结果</strong>。remove_reference的目的就在于强迫我们这样做。</S></p>
+<p>高兴的是，我们就快结束了。剩下的仅是看看std::move的实现。记住，std::move的目的在于：pass its argument right through by reference and make it bind like an rvalue</p>
+<p>下面是std::move的实现：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">class</span> <span class="title class_">T</span>&gt; </span><br><span class="line"><span class="keyword">typename</span> remove_reference&lt;T&gt;::<span class="function">type&amp;&amp;</span></span><br><span class="line"><span class="function"><span class="title">std::move</span><span class="params">(T&amp;&amp; a)</span> <span class="keyword">noexcept</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">typename</span> remove_reference&lt;T&gt;::type&amp;&amp; RvalRef;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">static_cast</span>&lt;RvalRef&gt;(a);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>假设我们通过类型为X的左值调用std::move</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">X x;</span><br><span class="line">std::<span class="built_in">move</span>(x);</span><br></pre></td></tr></table></figure>
+
+<p>基于special template deduction规则，模板参数T将会被解析为X&amp;，因此，编译器会生成如下实例：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typename</span> remove_reference&lt;X&amp;&gt;::<span class="function">type&amp;&amp;</span></span><br><span class="line"><span class="function"><span class="title">std::move</span><span class="params">(X&amp; &amp;&amp; a)</span> <span class="keyword">noexcept</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">typedef</span> <span class="keyword">typename</span> remove_reference&lt;X&amp;&gt;::type&amp;&amp; RvalRef;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">static_cast</span>&lt;RvalRef&gt;(a);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在应用remove_reference和reference collapsing规则之后，上述代码将变为：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">X&amp;&amp; <span class="title">std::move</span><span class="params">(X&amp; a)</span> <span class="keyword">noexcept</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">static_cast</span>&lt;X&amp;&amp;&gt;(a);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>S上述代码完成了如下任务：左值x将会与左值引用绑定作为其参数类型（our lvalue <code>x</code> will bind to the lvalue reference that is the argument type），函数将这个参数pass right through，将其转换为一个没有名字的右值引用。</p>
+<h1 id="Rvalue-References-And-Exceptions"><a href="#Rvalue-References-And-Exceptions" class="headerlink" title="Rvalue References And Exceptions"></a><strong>Rvalue References And Exceptions</strong></h1><p>正常来说，当你正在开发一款基于C++的应用，是否关注程序的异常安全性完全取决于你的选择。右值引用在异常安全的语境下又存在一些不同，当你想要利用移动语义重载一个类中的copy assignment operator和copy constructor，下面几件工作是非常建议你完成的：</p>
+<ol>
+<li>尽量写出不抛出异常的重载代码</li>
+<li>如果能够写出不抛出异常的代码，接下来就使用nonexcept关键字</li>
+</ol>
+<p>如果你没有完成上述两件工作，那么至少存在一个非常常见的场景，该场景下移动语义不会生效（尽管你非常期望移动语义能够生效）：当std::vector进行resize时，你当然希望vector中现存的元素被relocate进新的内存块时使用移动语义，但是如果上述两个条件没有满足，这种事情不会发生。</p>
+<h1 id="The-Case-of-the-Implicit-Move"><a href="#The-Case-of-the-Implicit-Move" class="headerlink" title="The Case of the Implicit Move"></a><strong>The Case of the Implicit Move</strong></h1><p>当用户没有提供为右值引用重载的拷贝构造函数或者重载赋值操作符时，编译器将implicitly生成这两个重载的函数。这将导致一些问题，具体参见：<a target="_blank" rel="noopener" href="http://thbecker.net/articles/rvalue_references/section_10.html">http://thbecker.net/articles/rvalue_references&#x2F;section_10.html</a></p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">home</a></li>
+         
+          <li><a href="/about/">about</a></li>
+         
+          <li><a href="/archives/">articles</a></li>
+         
+          <li><a target="_blank" rel="noopener" href="https://github.com/jyanminz">projects</a></li>
+         
+          <li><a href="/search/">search</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#C-Rvalue-References-Explained"><span class="toc-number">1.</span> <span class="toc-text">C++ Rvalue References Explained</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#C-%E4%B8%AD%E7%9A%84%E5%B7%A6%E5%80%BC%E5%92%8C%E5%8F%B3%E5%80%BC"><span class="toc-number">2.</span> <span class="toc-text">C++中的左值和右值</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%A7%BB%E5%8A%A8%E8%AF%AD%E4%B9%89"><span class="toc-number">3.</span> <span class="toc-text">移动语义</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8"><span class="toc-number">4.</span> <span class="toc-text">右值引用</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Forcing-Move-Semantics"><span class="toc-number">5.</span> <span class="toc-text">Forcing Move Semantics</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Is-an-Rvalue-Reference-an-Rvalue"><span class="toc-number">6.</span> <span class="toc-text">Is an Rvalue Reference an Rvalue?</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Move-Semantics-and-Compiler-Optimizations"><span class="toc-number">7.</span> <span class="toc-text">Move Semantics and Compiler Optimizations</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Perfect-Forwarding-The-Problem"><span class="toc-number">8.</span> <span class="toc-text">Perfect Forwarding: The Problem</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Perfect-Forwarding-The-Solution"><span class="toc-number">9.</span> <span class="toc-text">Perfect Forwarding: The Solution</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Rvalue-References-And-Exceptions"><span class="toc-number">10.</span> <span class="toc-text">Rvalue References And Exceptions</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#The-Case-of-the-Implicit-Move"><span class="toc-number">11.</span> <span class="toc-text">The Case of the Implicit Move</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2023/04/28/C-Rvalue-References-Explained/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&text=C++ Rvalue References Explained"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&title=C++ Rvalue References Explained"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&is_video=false&description=C++ Rvalue References Explained"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=C++ Rvalue References Explained&body=Check out this article: http://example.com/2023/04/28/C-Rvalue-References-Explained/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&title=C++ Rvalue References Explained"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&title=C++ Rvalue References Explained"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&title=C++ Rvalue References Explained"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&title=C++ Rvalue References Explained"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2023/04/28/C-Rvalue-References-Explained/&name=C++ Rvalue References Explained&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2023/04/28/C-Rvalue-References-Explained/&t=C++ Rvalue References Explained"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2023
+    jyanmin
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">home</a></li><!--
+     --><!--
+       --><li><a href="/about/">about</a></li><!--
+     --><!--
+       --><li><a href="/archives/">articles</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/jyanminz">projects</a></li><!--
+     --><!--
+       --><li><a href="/search/">search</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
